@@ -1,0 +1,67 @@
+{
+  "name": "k2gl/sshsig",
+  "description": "Faithful, zero-dependency PHP verifier for the OpenSSH SSHSIG signature format (ssh-keygen -Y verify): armor and SSH-wire parsing, signature verification, and allowed_signers matching.",
+  "homepage": "https://github.com/k2gl/sshsig",
+  "type": "library",
+  "license": "MIT",
+  "keywords": [
+    "sshsig",
+    "ssh",
+    "signature",
+    "ssh-keygen",
+    "verify",
+    "git",
+    "commit-signing",
+    "allowed-signers",
+    "openssh",
+    "ed25519",
+    "ecdsa",
+    "rsa",
+    "supply-chain"
+  ],
+  "authors": [
+    {
+      "name": "Nickolay Harin",
+      "email": "l0gic@ya.ru"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/k2gl/sshsig/issues",
+    "source": "https://github.com/k2gl/sshsig"
+  },
+  "require": {
+    "php": ">=8.1"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^10|^11|^12",
+    "phpstan/phpstan": "^2.1",
+    "laravel/pint": "~1.20.0",
+    "k2gl/phpunit-fluent-assertions": "^12"
+  },
+  "suggest": {
+    "ext-sodium": "Required to verify ssh-ed25519 signatures.",
+    "ext-openssl": "Required to verify rsa-sha2-256/512 and ecdsa-sha2-nistp256/384/521 signatures."
+  },
+  "autoload": {
+    "psr-4": {
+      "K2gl\\Sshsig\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "K2gl\\Sshsig\\Tests\\": "tests/"
+    }
+  },
+  "minimum-stability": "stable",
+  "scripts": {
+    "test": "phpunit",
+    "phpstan": "phpstan analyse",
+    "cs": "pint --test",
+    "cs-fix": "pint",
+    "check": [
+      "@test",
+      "@phpstan",
+      "@cs"
+    ]
+  }
+}
