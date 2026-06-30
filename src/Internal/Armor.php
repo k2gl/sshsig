@@ -19,6 +19,12 @@ final class Armor
     private const BEGIN = '-----BEGIN SSH SIGNATURE-----';
     private const END = '-----END SSH SIGNATURE-----';
 
+    /** Wrap the binary blob in SSHSIG armor, base64 line-wrapped at 70 (the OpenSSH width). */
+    public static function encode(string $blob): string
+    {
+        return self::BEGIN . "\n" . chunk_split(base64_encode($blob), 70, "\n") . self::END . "\n";
+    }
+
     public static function decode(string $armored): string
     {
         $begin = strpos($armored, self::BEGIN);

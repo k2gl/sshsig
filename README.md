@@ -6,10 +6,11 @@
 [![PHPStan](https://img.shields.io/badge/PHPStan-level%209-2a5ea7)](https://phpstan.org/)
 [![License](https://img.shields.io/packagist/l/k2gl/sshsig)](https://packagist.org/packages/k2gl/sshsig)
 
-Faithful, zero-dependency PHP verifier for the **OpenSSH SSHSIG** signature format — the
+Faithful, zero-dependency PHP implementation of the **OpenSSH SSHSIG** signature format — the
 signatures produced by `ssh-keygen -Y sign` and used for **Git commit/tag signing** and file
-signing. It parses the armor and SSH wire format, verifies the signature, and authorizes the
-signer against an `allowed_signers` file, mirroring `ssh-keygen -Y verify`.
+signing. It **verifies** signatures (parsing the armor and SSH wire format, then authorizing the
+signer against an `allowed_signers` file, mirroring `ssh-keygen -Y verify`) and **signs**
+messages with byte-output compatible with `ssh-keygen -Y verify`.
 
 Fail-closed by design: anything malformed, unsupported, cryptographically invalid, or
 unauthorized throws — nothing is ever silently treated as verified.
@@ -64,6 +65,32 @@ echo $signature->signatureAlgorithm;          // e.g. "ssh-ed25519"
 echo $signature->publicKey->fingerprint();    // "SHA256:…"
 ```
 
+### Sign a message
+
+Produce an SSHSIG signature (the `ssh-keygen -Y sign` operation). Provide the signing key —
+Ed25519 (a 64-byte libsodium secret key) or an OpenSSL RSA/ECDSA private key:
+
+```php
+use K2gl\Sshsig\Ed25519SigningKey;
+use K2gl\Sshsig\OpensslSigningKey;
+use K2gl\Sshsig\SshsigSigner;
+
+// Ed25519
+$keypair = sodium_crypto_sign_keypair();
+$signer = new SshsigSigner(new Ed25519SigningKey(sodium_crypto_sign_secretkey($keypair)));
+
+// …or RSA / ECDSA from an OpenSSL private key (PEM)
+$signer = new SshsigSigner(OpensslSigningKey::fromPem(file_get_contents('id_rsa')));
+
+$armored = $signer->sign($message, namespace: 'file');          // sha512 by default
+file_put_contents('message.sig', $armored);
+
+// the resulting signature verifies with `ssh-keygen -Y verify` and with this library
+```
+
+`$signer->publicKey()` returns the matching `SshPublicKey` (e.g. to build an `allowed_signers`
+line). The default hash is `sha512`; pass `hashAlgorithm: 'sha256'` to switch.
+
 ### Inspect or build allowed_signers in memory
 
 ```php
@@ -88,6 +115,8 @@ $allowed = AllowedSigners::fromString(<<<TXT
 - **`allowed_signers`.** Principals pattern-lists, `namespaces=`, `valid-after`/`valid-before`
   validity windows, and `cert-authority` entries (parsed and recorded; certificate-chain
   verification is not yet performed).
+- **Signing.** `SshsigSigner` over a pluggable `SigningKey` (Ed25519 via ext-sodium; RSA and
+  ECDSA via ext-openssl), producing armor byte-compatible with `ssh-keygen -Y verify`.
 - **Zero dependencies.** Pure PHP over `ext-sodium` and `ext-openssl`; no `phpseclib`.
 - **Verified against OpenSSH.** The test suite verifies real `ssh-keygen -Y sign` output for
   every supported algorithm, plus tampered, wrong-namespace, unauthorized, and malformed cases.

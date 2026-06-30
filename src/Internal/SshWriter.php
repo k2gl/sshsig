@@ -29,6 +29,18 @@ final class SshWriter
         return $this;
     }
 
+    /** A multiple-precision integer from an unsigned big-endian magnitude (RFC 4251 §5). */
+    public function putMpint(string $magnitude): self
+    {
+        $value = ltrim($magnitude, "\x00");
+
+        if ($value !== '' && (ord($value[0]) & 0x80) !== 0) {
+            $value = "\x00" . $value;
+        }
+
+        return $this->putString($value);
+    }
+
     public function bytes(): string
     {
         return $this->buffer;

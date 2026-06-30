@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.0
+
+- Add **signing** — `SshsigSigner` produces armored SSHSIG signatures (the `ssh-keygen -Y sign`
+  operation) over a pluggable `SigningKey`: `Ed25519SigningKey` (ext-sodium) and
+  `OpensslSigningKey` (RSA `rsa-sha2-256`/`512` and ECDSA `nistp256/384/521` via ext-openssl).
+  Output is byte-compatible with `ssh-keygen -Y verify`; the test suite cross-checks every
+  algorithm against the OpenSSH CLI.
+- `SshsigSigner::publicKey()` exposes the matching `SshPublicKey` (e.g. to build an
+  `allowed_signers` line).
+
 ## 1.0.0
 
 - Initial release: verify OpenSSH SSHSIG signatures — `SshsigVerifier::verify()` (the
