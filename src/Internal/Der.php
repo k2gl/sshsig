@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace K2gl\Sshsig\Internal;
 
+use K2gl\Sshsig\Exception\SigningException;
+
 /**
- * A minimal DER encoder — just enough to wrap an SSH-wire public key into a
- * SubjectPublicKeyInfo PEM that ext-openssl can load, and to turn an SSH ECDSA
- * (r, s) pair into the ASN.1 SEQUENCE that openssl_verify() expects.
+ * A minimal DER codec — just enough to wrap an SSH-wire public key into a
+ * SubjectPublicKeyInfo PEM that ext-openssl can load, to turn an SSH ECDSA
+ * (r, s) pair into the ASN.1 SEQUENCE that openssl_verify() expects, and to
+ * read the (r, s) back out of an openssl_sign() result.
  *
  * @internal
  */
@@ -60,6 +63,67 @@ final class Der
     public static function ecdsaSignature(string $r, string $s): string
     {
         return self::sequence(self::integer($r) . self::integer($s));
+    }
+
+    /**
+     * Read SEQUENCE { INTEGER r, INTEGER s } (an openssl_sign ECDSA result) and
+     * return the r and s contents. DER INTEGER content is already minimal,
+     * sign-correct big-endian — i.e. exactly the SSH mpint content.
+     *
+     * @return array{0: string, 1: string}
+     */
+    public static function parseEcdsaSignature(string $der): array
+    {
+        $offset = 0;
+
+        if (self::byte($der, $offset++) !== 0x30) {
+            throw new SigningException('Expected a DER SEQUENCE in the ECDSA signature.');
+        }
+        self::readLength($der, $offset);
+
+        return [self::readInteger($der, $offset), self::readInteger($der, $offset)];
+    }
+
+    private static function byte(string $bytes, int $index): int
+    {
+        if (! isset($bytes[$index])) {
+            throw new SigningException('Truncated DER in the ECDSA signature.');
+        }
+
+        return ord($bytes[$index]);
+    }
+
+    private static function readLength(string $bytes, int &$offset): int
+    {
+        $first = self::byte($bytes, $offset++);
+
+        if ($first < 0x80) {
+            return $first;
+        }
+        $count = $first & 0x7f;
+        $length = 0;
+
+        for ($i = 0; $i < $count; $i++) {
+            $length = ($length << 8) | self::byte($bytes, $offset++);
+        }
+
+        return $length;
+    }
+
+    private static function readInteger(string $bytes, int &$offset): string
+    {
+        if (self::byte($bytes, $offset++) !== 0x02) {
+            throw new SigningException('Expected a DER INTEGER in the ECDSA signature.');
+        }
+        $length = self::readLength($bytes, $offset);
+        $value = substr($bytes, $offset, $length);
+
+        if (strlen($value) !== $length) {
+            throw new SigningException('Truncated DER INTEGER in the ECDSA signature.');
+        }
+        $offset += $length;
+
+        return $value;
     }
 
     private static function length(int $length): string

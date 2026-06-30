@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace K2gl\Sshsig;
 
 use K2gl\Sshsig\Exception\InvalidSignatureException;
-use K2gl\Sshsig\Exception\UnsupportedAlgorithmException;
 use K2gl\Sshsig\Internal\Armor;
 use K2gl\Sshsig\Internal\SshReader;
-use K2gl\Sshsig\Internal\SshWriter;
+use K2gl\Sshsig\Internal\Tosign;
 
 /**
  * A parsed SSHSIG signature (OpenSSH PROTOCOL.sshsig): the signer's public key,
@@ -70,23 +69,6 @@ final class SshSignature
      */
     public function signedData(string $message): string
     {
-        return (new SshWriter)
-            ->putBytes(self::MAGIC)
-            ->putString($this->namespace)
-            ->putString('')
-            ->putString($this->hashAlgorithm)
-            ->putString($this->hashMessage($message))
-            ->bytes();
-    }
-
-    private function hashMessage(string $message): string
-    {
-        return match ($this->hashAlgorithm) {
-            'sha256' => hash('sha256', $message, true),
-            'sha512' => hash('sha512', $message, true),
-            default => throw new UnsupportedAlgorithmException(
-                sprintf('Unsupported SSHSIG hash algorithm "%s".', $this->hashAlgorithm)
-            ),
-        };
+        return Tosign::build($this->namespace, $this->hashAlgorithm, $message);
     }
 }
