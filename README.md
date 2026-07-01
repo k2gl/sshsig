@@ -6,11 +6,10 @@
 [![PHPStan](https://img.shields.io/badge/PHPStan-level%209-2a5ea7)](https://phpstan.org/)
 [![License](https://img.shields.io/packagist/l/k2gl/sshsig)](https://packagist.org/packages/k2gl/sshsig)
 
-Faithful, zero-dependency PHP implementation of the **OpenSSH SSHSIG** signature format — the
-signatures produced by `ssh-keygen -Y sign` and used for **Git commit/tag signing** and file
-signing. It **verifies** signatures (parsing the armor and SSH wire format, then authorizing the
-signer against an `allowed_signers` file, mirroring `ssh-keygen -Y verify`) and **signs**
-messages with byte-output compatible with `ssh-keygen -Y verify`.
+Sign and verify files with SSH keys in PHP, in the OpenSSH SSHSIG format that `ssh-keygen -Y
+sign/verify` produces (the signatures Git uses for commit and tag signing). Verifying checks
+the signer against an `allowed_signers` file; signing emits bytes `ssh-keygen -Y verify`
+accepts. No dependencies.
 
 Fail-closed by design: anything malformed, unsupported, cryptographically invalid, or
 unauthorized throws — nothing is ever silently treated as verified.
