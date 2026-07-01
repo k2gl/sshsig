@@ -105,7 +105,7 @@ $allowed = AllowedSigners::fromString(<<<TXT
 - **Fail-closed.** Every failure path throws a `K2gl\Sshsig\Exception\SshsigException`
   (`InvalidSignatureException`, `UnsupportedAlgorithmException`, `SignatureVerificationFailed`,
   `SignerNotAllowedException`). A returned value always means verified.
-- **Spec-faithful.** Implements OpenSSH `PROTOCOL.sshsig`: the `SSHSIG` magic preamble,
+- **Spec-accurate.** Implements OpenSSH `PROTOCOL.sshsig`: the `SSHSIG` magic preamble,
   version 1, the `to-be-signed` blob (namespace + reserved + hash algorithm + message hash),
   and the armor.
 - **Algorithms.** `ssh-ed25519`, `rsa-sha2-256`, `rsa-sha2-512`,
