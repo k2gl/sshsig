@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0
+
+- Add `OpensshPrivateKey::fromFile()` / `::fromString()` — loads a `SigningKey` straight from an
+  unencrypted `ssh-ed25519` `openssh-key-v1` container, the format `ssh-keygen` writes by default,
+  so a key on disk (e.g. `~/.ssh/id_ed25519`) no longer needs manual extraction before signing.
+  Encrypted containers (no `bcrypt_pbkdf` available) and RSA/ECDSA containers throw
+  `UnsupportedAlgorithmException` rather than a silent partial read.
+
 ## 1.1.0
 
 - Add **signing** — `SshsigSigner` produces armored SSHSIG signatures (the `ssh-keygen -Y sign`
