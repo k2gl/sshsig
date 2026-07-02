@@ -71,6 +71,7 @@ Ed25519 (a 64-byte libsodium secret key) or an OpenSSL RSA/ECDSA private key:
 
 ```php
 use K2gl\Sshsig\Ed25519SigningKey;
+use K2gl\Sshsig\OpensshPrivateKey;
 use K2gl\Sshsig\OpensslSigningKey;
 use K2gl\Sshsig\SshsigSigner;
 
@@ -80,6 +81,9 @@ $signer = new SshsigSigner(new Ed25519SigningKey(sodium_crypto_sign_secretkey($k
 
 // …or RSA / ECDSA from an OpenSSL private key (PEM)
 $signer = new SshsigSigner(OpensslSigningKey::fromPem(file_get_contents('id_rsa')));
+
+// …or an unencrypted ssh-ed25519 key straight off disk, in the format ssh-keygen writes
+$signer = new SshsigSigner(OpensshPrivateKey::fromFile('/home/you/.ssh/id_ed25519'));
 
 $armored = $signer->sign($message, namespace: 'file');          // sha512 by default
 file_put_contents('message.sig', $armored);
@@ -116,6 +120,9 @@ $allowed = AllowedSigners::fromString(<<<TXT
   verification is not yet performed).
 - **Signing.** `SshsigSigner` over a pluggable `SigningKey` (Ed25519 via ext-sodium; RSA and
   ECDSA via ext-openssl), producing armor byte-compatible with `ssh-keygen -Y verify`.
+  `OpensshPrivateKey::fromFile()`/`::fromString()` load an unencrypted `ssh-ed25519` key straight
+  from the `openssh-key-v1` container `ssh-keygen` writes by default; encrypted containers and
+  RSA/ECDSA containers are refused (fail-closed) rather than partially read.
 - **Zero dependencies.** Pure PHP over `ext-sodium` and `ext-openssl`; no `phpseclib`.
 - **Verified against OpenSSH.** The test suite verifies real `ssh-keygen -Y sign` output for
   every supported algorithm, plus tampered, wrong-namespace, unauthorized, and malformed cases.
