@@ -1,6 +1,6 @@
 {
   "name": "k2gl/sshsig",
-  "description": "Pure-PHP SSHSIG signing and verification, compatible with ssh-keygen -Y.",
+  "description": "Pure-PHP SSHSIG signing and verification, compatible with ssh-keygen -Y",
   "homepage": "https://github.com/k2gl/sshsig",
   "type": "library",
   "license": "MIT",
