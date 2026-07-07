@@ -14,6 +14,8 @@ use K2gl\Sshsig\SshsigVerifier;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
+use function K2gl\PHPUnitFluentAssertions\fact;
+
 #[CoversClass(SshSignature::class)]
 #[CoversClass(SshsigVerifier::class)]
 #[CoversClass(Armor::class)]
@@ -25,44 +27,44 @@ final class MalformedSignatureTest extends TestCase
 
     public function testRejectsBadArmor(): void
     {
-        $this->expectException(InvalidSignatureException::class);
-
-        (new SshsigVerifier)->checkNoValidate('message', 'not a signature', self::NS);
+        // act + assert
+        fact(static fn () => (new SshsigVerifier)->checkNoValidate('message', 'not a signature', self::NS))
+            ->throws(InvalidSignatureException::class);
     }
 
     public function testRejectsWrongVersion(): void
     {
-        $this->expectException(InvalidSignatureException::class);
-
-        $this->check(self::blob(version: 2, namespace: self::NS, hashAlgorithm: 'sha512', signatureAlgorithm: 'ssh-ed25519'));
+        // act + assert
+        fact(fn () => $this->check(self::blob(version: 2, namespace: self::NS, hashAlgorithm: 'sha512', signatureAlgorithm: 'ssh-ed25519')))
+            ->throws(InvalidSignatureException::class);
     }
 
     public function testRejectsEmptyNamespace(): void
     {
-        $this->expectException(InvalidSignatureException::class);
-
-        $this->check(self::blob(version: 1, namespace: '', hashAlgorithm: 'sha512', signatureAlgorithm: 'ssh-ed25519'));
+        // act + assert
+        fact(fn () => $this->check(self::blob(version: 1, namespace: '', hashAlgorithm: 'sha512', signatureAlgorithm: 'ssh-ed25519')))
+            ->throws(InvalidSignatureException::class);
     }
 
     public function testRejectsTrailingBytes(): void
     {
-        $this->expectException(InvalidSignatureException::class);
-
-        $this->check(self::blob(version: 1, namespace: self::NS, hashAlgorithm: 'sha512', signatureAlgorithm: 'ssh-ed25519') . 'x');
+        // act + assert
+        fact(fn () => $this->check(self::blob(version: 1, namespace: self::NS, hashAlgorithm: 'sha512', signatureAlgorithm: 'ssh-ed25519') . 'x'))
+            ->throws(InvalidSignatureException::class);
     }
 
     public function testRejectsUnsupportedSignatureAlgorithm(): void
     {
-        $this->expectException(UnsupportedAlgorithmException::class);
-
-        $this->check(self::blob(version: 1, namespace: self::NS, hashAlgorithm: 'sha512', signatureAlgorithm: 'ssh-rsa'));
+        // act + assert
+        fact(fn () => $this->check(self::blob(version: 1, namespace: self::NS, hashAlgorithm: 'sha512', signatureAlgorithm: 'ssh-rsa')))
+            ->throws(UnsupportedAlgorithmException::class);
     }
 
     public function testRejectsUnsupportedHashAlgorithm(): void
     {
-        $this->expectException(UnsupportedAlgorithmException::class);
-
-        $this->check(self::blob(version: 1, namespace: self::NS, hashAlgorithm: 'md5', signatureAlgorithm: 'ssh-ed25519'));
+        // act + assert
+        fact(fn () => $this->check(self::blob(version: 1, namespace: self::NS, hashAlgorithm: 'md5', signatureAlgorithm: 'ssh-ed25519')))
+            ->throws(UnsupportedAlgorithmException::class);
     }
 
     private function check(string $blob): void

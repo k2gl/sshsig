@@ -35,9 +35,8 @@ final class AllowedSignersTest extends TestCase
 
     public function testRejectsNamespaceOutsideRestriction(): void
     {
-        $this->expectException(SignerNotAllowedException::class);
-
-        $this->verify($this->line(self::ID, 'namespaces="git,mail"'));
+        // act + assert
+        fact(fn () => $this->verify($this->line(self::ID, 'namespaces="git,mail"')))->throws(SignerNotAllowedException::class);
     }
 
     public function testAuthorizesWithinValidityWindow(): void
@@ -50,16 +49,16 @@ final class AllowedSignersTest extends TestCase
 
     public function testRejectsExpiredKey(): void
     {
-        $this->expectException(SignerNotAllowedException::class);
-
-        $this->verify($this->line(self::ID, 'valid-before="19700101Z"'), new DateTimeImmutable('2026-06-30T12:00:00Z'));
+        // act + assert
+        fact(fn () => $this->verify($this->line(self::ID, 'valid-before="19700101Z"'), new DateTimeImmutable('2026-06-30T12:00:00Z')))
+            ->throws(SignerNotAllowedException::class);
     }
 
     public function testRejectsNotYetValidKey(): void
     {
-        $this->expectException(SignerNotAllowedException::class);
-
-        $this->verify($this->line(self::ID, 'valid-after="20990101Z"'), new DateTimeImmutable('2026-06-30T12:00:00Z'));
+        // act + assert
+        fact(fn () => $this->verify($this->line(self::ID, 'valid-after="20990101Z"'), new DateTimeImmutable('2026-06-30T12:00:00Z')))
+            ->throws(SignerNotAllowedException::class);
     }
 
     public function testAuthorizesPrincipalWildcard(): void
@@ -71,16 +70,14 @@ final class AllowedSignersTest extends TestCase
 
     public function testRejectsNegatedPrincipal(): void
     {
-        $this->expectException(SignerNotAllowedException::class);
-
-        $this->verify($this->line('!alice@example.com,*@example.com', ''));
+        // act + assert
+        fact(fn () => $this->verify($this->line('!alice@example.com,*@example.com', '')))->throws(SignerNotAllowedException::class);
     }
 
     public function testSkipsCertAuthorityEntries(): void
     {
-        $this->expectException(SignerNotAllowedException::class);
-
-        $this->verify($this->line(self::ID, 'cert-authority'));
+        // act + assert
+        fact(fn () => $this->verify($this->line(self::ID, 'cert-authority')))->throws(SignerNotAllowedException::class);
     }
 
     public function testParsesCommentsAndBlankLines(): void
@@ -93,9 +90,8 @@ final class AllowedSignersTest extends TestCase
 
     public function testRejectsMalformedLine(): void
     {
-        $this->expectException(InvalidSignatureException::class);
-
-        AllowedSigners::fromString('only-one-token');
+        // act + assert
+        fact(static fn () => AllowedSigners::fromString('only-one-token'))->throws(InvalidSignatureException::class);
     }
 
     private function verify(string $allowedSigners, ?DateTimeImmutable $time = null): \K2gl\Sshsig\VerifiedSignature
