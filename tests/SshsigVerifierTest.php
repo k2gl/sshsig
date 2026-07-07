@@ -79,44 +79,43 @@ final class SshsigVerifierTest extends TestCase
 
     public function testRejectsTamperedMessage(): void
     {
-        $this->expectException(SignatureVerificationFailed::class);
-
-        (new SshsigVerifier)->checkNoValidate('tampered', self::fixture('ed25519.sig'), self::NS);
+        // act + assert
+        fact(static fn () => (new SshsigVerifier)->checkNoValidate('tampered', self::fixture('ed25519.sig'), self::NS))
+            ->throws(SignatureVerificationFailed::class);
     }
 
     public function testRejectsWrongNamespace(): void
     {
-        $this->expectException(SignatureVerificationFailed::class);
-
-        (new SshsigVerifier)->checkNoValidate(self::fixture('message.txt'), self::fixture('ed25519.sig'), 'git');
+        // act + assert
+        fact(static fn () => (new SshsigVerifier)->checkNoValidate(self::fixture('message.txt'), self::fixture('ed25519.sig'), 'git'))
+            ->throws(SignatureVerificationFailed::class);
     }
 
     public function testRejectsUnknownIdentity(): void
     {
-        $this->expectException(SignerNotAllowedException::class);
-
-        (new SshsigVerifier)->verify(
+        // act + assert
+        fact(static fn () => (new SshsigVerifier)->verify(
             message: self::fixture('message.txt'),
             armoredSignature: self::fixture('ed25519.sig'),
             allowedSigners: AllowedSigners::fromString(self::fixture('allowed_signers')),
             identity: 'bob@example.com',
             namespace: self::NS,
-        );
+        ))->throws(SignerNotAllowedException::class);
     }
 
     public function testRejectsUnauthorizedKey(): void
     {
+        // arrange
         $allowed = self::ID . ' ' . trim(self::fixture('other.pub'));
 
-        $this->expectException(SignerNotAllowedException::class);
-
-        (new SshsigVerifier)->verify(
+        // act + assert
+        fact(static fn () => (new SshsigVerifier)->verify(
             message: self::fixture('message.txt'),
             armoredSignature: self::fixture('ed25519.sig'),
             allowedSigners: AllowedSigners::fromString($allowed),
             identity: self::ID,
             namespace: self::NS,
-        );
+        ))->throws(SignerNotAllowedException::class);
     }
 
     private static function fixture(string $name): string

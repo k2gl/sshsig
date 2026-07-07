@@ -86,11 +86,11 @@ final class SshsigSignerTest extends TestCase
 
     public function testRejectsEmptyNamespace(): void
     {
+        // arrange
         $key = new Ed25519SigningKey(sodium_crypto_sign_secretkey(sodium_crypto_sign_keypair()));
 
-        $this->expectException(InvalidSignatureException::class);
-
-        (new SshsigSigner($key))->sign(self::MESSAGE, '');
+        // act + assert
+        fact(static fn () => (new SshsigSigner($key))->sign(self::MESSAGE, ''))->throws(InvalidSignatureException::class);
     }
 
     private function verify(SigningKey $key, string $signature): \K2gl\Sshsig\VerifiedSignature

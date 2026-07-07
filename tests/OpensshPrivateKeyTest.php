@@ -37,6 +37,7 @@ final class OpensshPrivateKeyTest extends TestCase
 
     public function testFromFileLoadsAndFromFileMissingThrows(): void
     {
+        // arrange
         $pair = sodium_crypto_sign_keypair();
         $path = sys_get_temp_dir() . '/sshsig-openssh-key-' . bin2hex(random_bytes(6));
         file_put_contents($path, self::armor(self::container(
@@ -50,26 +51,28 @@ final class OpensshPrivateKeyTest extends TestCase
         unlink($path);
         fact($key)->instanceOf(Ed25519SigningKey::class);
 
-        $this->expectException(SigningException::class);
-        OpensshPrivateKey::fromFile($path);
+        // act + assert
+        fact(static fn () => OpensshPrivateKey::fromFile($path))->throws(SigningException::class);
     }
 
     public function testRejectsMissingArmorMarkers(): void
     {
-        $this->expectException(SigningException::class);
-        OpensshPrivateKey::fromString("not a key\n");
+        // act + assert
+        fact(static fn () => OpensshPrivateKey::fromString("not a key\n"))->throws(SigningException::class);
     }
 
     public function testRejectsWrongMagic(): void
     {
+        // arrange
         $blob = "not-openssh-key\0" . random_bytes(16);
 
-        $this->expectException(SigningException::class);
-        OpensshPrivateKey::fromString(self::armor($blob));
+        // act + assert
+        fact(static fn () => OpensshPrivateKey::fromString(self::armor($blob)))->throws(SigningException::class);
     }
 
     public function testRejectsEncryptedContainer(): void
     {
+        // arrange
         $pair = sodium_crypto_sign_keypair();
         $container = self::container(
             'aes256-ctr',
@@ -78,12 +81,13 @@ final class OpensshPrivateKeyTest extends TestCase
             sodium_crypto_sign_secretkey($pair),
         );
 
-        $this->expectException(UnsupportedAlgorithmException::class);
-        OpensshPrivateKey::fromString(self::armor($container));
+        // act + assert
+        fact(static fn () => OpensshPrivateKey::fromString(self::armor($container)))->throws(UnsupportedAlgorithmException::class);
     }
 
     public function testRejectsMoreThanOneKey(): void
     {
+        // arrange
         $pair = sodium_crypto_sign_keypair();
         $pk = sodium_crypto_sign_publickey($pair);
         $sk = sodium_crypto_sign_secretkey($pair);
@@ -98,12 +102,13 @@ final class OpensshPrivateKeyTest extends TestCase
             ->putString(self::publicKeyBlob($pk))
             ->putString(self::privateSection('ssh-ed25519', $pk, $sk));
 
-        $this->expectException(UnsupportedAlgorithmException::class);
-        OpensshPrivateKey::fromString(self::armor($writer->bytes()));
+        // act + assert
+        fact(static fn () => OpensshPrivateKey::fromString(self::armor($writer->bytes())))->throws(UnsupportedAlgorithmException::class);
     }
 
     public function testRejectsUnsupportedKeyType(): void
     {
+        // arrange
         $checkint = random_bytes(4);
         $private = (new SshWriter)
             ->putBytes($checkint)
@@ -120,12 +125,13 @@ final class OpensshPrivateKeyTest extends TestCase
             ->putString('dummy public key blob')
             ->putString($private);
 
-        $this->expectException(UnsupportedAlgorithmException::class);
-        OpensshPrivateKey::fromString(self::armor($writer->bytes()));
+        // act + assert
+        fact(static fn () => OpensshPrivateKey::fromString(self::armor($writer->bytes())))->throws(UnsupportedAlgorithmException::class);
     }
 
     public function testRejectsChecksumMismatch(): void
     {
+        // arrange
         $pair = sodium_crypto_sign_keypair();
         $pk = sodium_crypto_sign_publickey($pair);
         $sk = sodium_crypto_sign_secretkey($pair);
@@ -149,12 +155,13 @@ final class OpensshPrivateKeyTest extends TestCase
             ->putString(self::publicKeyBlob($pk))
             ->putString($private);
 
-        $this->expectException(SigningException::class);
-        OpensshPrivateKey::fromString(self::armor($writer->bytes()));
+        // act + assert
+        fact(static fn () => OpensshPrivateKey::fromString(self::armor($writer->bytes())))->throws(SigningException::class);
     }
 
     public function testRejectsInvalidPadding(): void
     {
+        // arrange
         $pair = sodium_crypto_sign_keypair();
         $pk = sodium_crypto_sign_publickey($pair);
         $sk = sodium_crypto_sign_secretkey($pair);
@@ -179,8 +186,8 @@ final class OpensshPrivateKeyTest extends TestCase
             ->putString(self::publicKeyBlob($pk))
             ->putString($private);
 
-        $this->expectException(SigningException::class);
-        OpensshPrivateKey::fromString(self::armor($writer->bytes()));
+        // act + assert
+        fact(static fn () => OpensshPrivateKey::fromString(self::armor($writer->bytes())))->throws(SigningException::class);
     }
 
     public function testRealSshKeygenUnencryptedKeyRoundTrips(): void
@@ -203,15 +210,15 @@ final class OpensshPrivateKeyTest extends TestCase
 
     public function testRealSshKeygenEncryptedKeyIsRejected(): void
     {
+        // arrange
         if (! self::sshKeygenAvailable()) {
             self::markTestSkipped('ssh-keygen is not available.');
         }
         $dir = self::sshKeygenGenerate('correct horse battery staple');
 
-        $this->expectException(UnsupportedAlgorithmException::class);
-
+        // act + assert
         try {
-            OpensshPrivateKey::fromFile($dir . '/id_ed25519');
+            fact(static fn () => OpensshPrivateKey::fromFile($dir . '/id_ed25519'))->throws(UnsupportedAlgorithmException::class);
         } finally {
             self::cleanupDir($dir);
         }
