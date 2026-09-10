@@ -85,7 +85,7 @@ final class AllowedSignersTest extends TestCase
         $contents = "# a comment\n\n" . $this->line(self::ID, '') . "\n";
         $signers = AllowedSigners::fromString($contents);
 
-        fact(count($signers->all()))->is(1);
+        fact($signers->all())->count(1);
     }
 
     public function testRejectsMalformedLine(): void

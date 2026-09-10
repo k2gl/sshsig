@@ -148,7 +148,7 @@ final class SshsigSignerTest extends TestCase
             ? ['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => $curve]
             : ['private_key_type' => OPENSSL_KEYTYPE_RSA, 'private_key_bits' => 2048];
         $key = openssl_pkey_new($config);
-        fact($key !== false)->true();
+        fact($key)->notFalse();
 
         return $key;
     }

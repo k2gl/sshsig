@@ -57,7 +57,7 @@ final class SshsigVerifierTest extends TestCase
             namespace: self::NS,
         );
 
-        fact($result instanceof VerifiedSignature)->true();
+        fact($result)->instanceOf(VerifiedSignature::class);
         fact($result->identity)->is(self::ID);
         fact($result->namespace)->is(self::NS);
         fact($result->principals)->is(self::ID);
@@ -74,7 +74,7 @@ final class SshsigVerifierTest extends TestCase
 
         fact($signature->signatureAlgorithm)->is($algorithm);
         fact($signature->namespace)->is(self::NS);
-        fact(str_starts_with($signature->publicKey->fingerprint(), 'SHA256:'))->true();
+        fact($signature->publicKey->fingerprint())->startsWith('SHA256:');
     }
 
     public function testRejectsTamperedMessage(): void
